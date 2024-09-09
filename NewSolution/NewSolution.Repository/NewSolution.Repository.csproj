@@ -6,4 +6,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NewSolution.Model\NewSolution.Model.csproj" />
+    <ProjectReference Include="..\NewSolution.Repository.Common\NewSolution.Repository.Common.csproj" />
+  </ItemGroup>
+
 </Project>

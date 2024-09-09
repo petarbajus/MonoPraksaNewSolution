@@ -95,15 +95,18 @@ namespace NewSolution.Repository
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
-                var commandText = "INSERT INTO \"Club\" (\"Id\", \"Name\", \"CharacteristicColor\", \"FoundationDate\") VALUES (@id, @name, @characteristicColor, @foundationDate);";
+                string commandText = "INSERT INTO \"Club\" (\"Id\", \"Name\", \"CharacteristicColor\", \"FoundationDate\") VALUES (@id, @name, @characteristicColor, @foundationDate);";
+
                 using var command = new NpgsqlCommand(commandText, connection);
-                command.Parameters.AddWithValue("@id", Guid.NewGuid());
-                command.Parameters.AddWithValue("@name", club.Name);
-                command.Parameters.AddWithValue("@characteristicColor", club.CharacteristicColor);
-                command.Parameters.AddWithValue("@foundationDate", club.FoundationDate.HasValue ? (object)club.FoundationDate.Value.ToDateTime(new TimeOnly()) : DBNull.Value);
+                command.Parameters.AddWithValue("@id", NpgsqlTypes.NpgsqlDbType.Uuid, Guid.NewGuid());
+                command.Parameters.AddWithValue("@name", club.Name ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@characteristicColor", club.CharacteristicColor ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@foundationDate", club.FoundationDate.HasValue ? (object)club.FoundationDate.Value : DBNull.Value);
 
                 connection.Open();
                 var numberOfCommits = command.ExecuteNonQuery();
+                connection.Close();
+
                 return numberOfCommits > 0;
             }
             catch (NpgsqlException)
@@ -117,50 +120,77 @@ namespace NewSolution.Repository
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
+                connection.Open();
 
-                var getCommandText = "SELECT * FROM \"Club\" WHERE \"Id\" = @id;";
+                // Step 1: Retrieve the current club details
+                var getCommandText = "SELECT \"Id\", \"Name\", \"CharacteristicColor\", \"FoundationDate\" FROM \"Club\" WHERE \"Id\" = @id;";
                 using var getCommand = new NpgsqlCommand(getCommandText, connection);
                 getCommand.Parameters.AddWithValue("@id", id);
 
-                connection.Open();
                 using var reader = getCommand.ExecuteReader();
-                if (!reader.Read())
+                if (!reader.HasRows)
                 {
-                    return false;
+                    return false; // Club not found
                 }
 
-                List<string> updateStatements = new List<string>();
-                var parameters = new List<NpgsqlParameter>
+                // Read the current club details from the database
+                reader.Read();
+                var currentClub = new Club
                 {
-                    new NpgsqlParameter("@id", id)
+                    Id = reader.GetGuid(reader.GetOrdinal("Id")),
+                    Name = reader.GetString(reader.GetOrdinal("Name")),
+                    CharacteristicColor = reader.IsDBNull(reader.GetOrdinal("CharacteristicColor"))
+                        ? null
+                        : reader.GetString(reader.GetOrdinal("CharacteristicColor")),
+                    FoundationDate = reader.IsDBNull(reader.GetOrdinal("FoundationDate"))
+                        ? (DateOnly?)null
+                        : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("FoundationDate")))
                 };
 
-                if (!string.IsNullOrEmpty(club.Name) && !reader.GetString(1).Equals(club.Name, StringComparison.Ordinal))
+                // Step 2: Determine which fields need to be updated
+                var updateStatements = new List<string>();
+                if (!string.IsNullOrEmpty(club.Name) && club.Name != currentClub.Name)
                 {
                     updateStatements.Add("\"Name\" = @name");
-                    parameters.Add(new NpgsqlParameter("@name", club.Name));
                 }
 
-                if (!string.IsNullOrEmpty(club.CharacteristicColor) && !reader.GetString(3).Equals(club.CharacteristicColor, StringComparison.Ordinal))
+                if (!string.IsNullOrEmpty(club.CharacteristicColor) && club.CharacteristicColor != currentClub.CharacteristicColor)
                 {
                     updateStatements.Add("\"CharacteristicColor\" = @characteristicColor");
-                    parameters.Add(new NpgsqlParameter("@characteristicColor", club.CharacteristicColor));
                 }
 
-                if (club.FoundationDate.HasValue && reader.IsDBNull(2) || reader.GetDateTime(2) != club.FoundationDate.Value.ToDateTime(new TimeOnly()))
+                if (club.FoundationDate.HasValue && club.FoundationDate.Value != currentClub.FoundationDate)
                 {
                     updateStatements.Add("\"FoundationDate\" = @foundationDate");
-                    parameters.Add(new NpgsqlParameter("@foundationDate", club.FoundationDate.Value.ToDateTime(new TimeOnly())));
                 }
 
+                // If no fields are to be updated, return
                 if (updateStatements.Count == 0)
                 {
                     return true;
                 }
 
+                // Step 3: Build and execute the update command
                 var updateCommandText = $"UPDATE \"Club\" SET {string.Join(", ", updateStatements)} WHERE \"Id\" = @id;";
                 using var updateCommand = new NpgsqlCommand(updateCommandText, connection);
-                updateCommand.Parameters.AddRange(parameters.ToArray());
+
+                // Add necessary parameters
+                updateCommand.Parameters.AddWithValue("@id", id);
+
+                if (updateStatements.Contains("\"Name\" = @name"))
+                {
+                    updateCommand.Parameters.AddWithValue("@name", club.Name);
+                }
+
+                if (updateStatements.Contains("\"CharacteristicColor\" = @characteristicColor"))
+                {
+                    updateCommand.Parameters.AddWithValue("@characteristicColor", club.CharacteristicColor);
+                }
+
+                if (updateStatements.Contains("\"FoundationDate\" = @foundationDate"))
+                {
+                    updateCommand.Parameters.AddWithValue("@foundationDate", club.FoundationDate.Value.ToDateTime(new TimeOnly()));
+                }
 
                 var rowsAffected = updateCommand.ExecuteNonQuery();
                 return rowsAffected > 0;
@@ -170,5 +200,8 @@ namespace NewSolution.Repository
                 return false;
             }
         }
+
+
+
     }
 }

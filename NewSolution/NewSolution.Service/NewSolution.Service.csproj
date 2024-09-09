@@ -6,4 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NewSolution.Model\NewSolution.Model.csproj" />
+    <ProjectReference Include="..\NewSolution.Repository.Common\NewSolution.Repository.Common.csproj" />
+    <ProjectReference Include="..\NewSolution.Repository\NewSolution.Repository.csproj" />
+    <ProjectReference Include="..\NewSolution.Service.Common\NewSolution.Service.Common.csproj" />
+  </ItemGroup>
+
 </Project>

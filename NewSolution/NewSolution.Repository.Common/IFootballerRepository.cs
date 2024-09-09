@@ -9,10 +9,10 @@ namespace NewSolution.Repository.Common
 {
     public interface IFootballerRepository
     {
-        bool InsertFootballer(Footballer footballer);
-        bool DeleteFootballerById(Guid id);
-        bool UpdateFootballerById(Guid id, Footballer footballer);
-        Footballer GetFootballerById(Guid id);
-        List<Footballer> GetFootballers();
+        Task<bool> InsertFootballerAsync(Footballer footballer);
+        Task<bool> DeleteFootballerByIdAsync(Guid id);
+        Task<bool> UpdateFootballerByIdAsync(Guid id, Footballer footballer);
+        Task<Footballer> GetFootballerByIdAsync(Guid id);
+        Task<List<Footballer>> GetFootballersAsync();
     }
 }

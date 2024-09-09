@@ -9,34 +9,34 @@ namespace NewSolution.Service
 {
     public class FootballerService : IFootballerService
     {
-        public bool InsertFootballer(Footballer footballer)
+        public async Task<bool> InsertFootballerAsync(Footballer footballer)
         {
             FootballerRepository footballerRepository = new FootballerRepository();
-            return footballerRepository.InsertFootballer(footballer);
+            return await footballerRepository.InsertFootballerAsync(footballer);
         }
 
-        public bool DeleteFootballerById(Guid id)
+        public async Task<bool> DeleteFootballerByIdAsync(Guid id)
         {
             IFootballerRepository footballerRepository = new FootballerRepository();
-            return footballerRepository.DeleteFootballerById(id);
+            return await footballerRepository.DeleteFootballerByIdAsync(id);
         }
 
-        public bool UpdateFootballerById(Guid id, Footballer footballer)
+        public async Task<bool> UpdateFootballerByIdAsync(Guid id, Footballer footballer)
         {
             IFootballerRepository footballerRepository = new FootballerRepository();
-            return footballerRepository.UpdateFootballerById(id, footballer);
+            return await footballerRepository.UpdateFootballerByIdAsync(id, footballer);
         }
 
-        public Footballer GetFootballerById(Guid id)
+        public async Task<Footballer> GetFootballerByIdAsync(Guid id)
         {
             IFootballerRepository footballerRepository = new FootballerRepository();
-            return footballerRepository.GetFootballerById(id);
+            return await footballerRepository.GetFootballerByIdAsync(id);
         }
 
-        public List<Footballer> GetFootballers()
+        public async Task<List<Footballer>> GetFootballersAsync()
         {
             IFootballerRepository footballerRepository = new FootballerRepository();
-            return footballerRepository.GetFootballers();
+            return await footballerRepository.GetFootballersAsync();
         }
     }
 }

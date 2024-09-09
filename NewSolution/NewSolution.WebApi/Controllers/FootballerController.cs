@@ -12,7 +12,7 @@ namespace NewSolution.WebApi.Controllers
     public class FootballerController : ControllerBase
     {
         [HttpPost("insertFootballer")]
-        public IActionResult InsertFootballer([FromBody] Footballer footballer)
+        public async Task<IActionResult> InsertFootballerAsync([FromBody] Footballer footballer)
         {
             var footballerService = new FootballerService();
             if (footballer == null)
@@ -20,39 +20,39 @@ namespace NewSolution.WebApi.Controllers
                 return BadRequest("Footballer object is null.");
             }
 
-            var success = footballerService.InsertFootballer(footballer);
+            var success = await footballerService.InsertFootballerAsync(footballer);
             return success ? Ok() : BadRequest("Failed to insert footballer.");
         }
 
         [HttpDelete("deleteFootballerById/{id}")]
-        public IActionResult DeleteFootballerById(Guid id)
+        public async Task<IActionResult> DeleteFootballerByIdAsync(Guid id)
         {
             var footballerService = new FootballerService();
-            var success = footballerService.DeleteFootballerById(id);
+            var success = await footballerService.DeleteFootballerByIdAsync(id);
             return success ? Ok() : NotFound("Footballer not found.");
         }
 
         [HttpPut("updateFootballerById/{id}")]
-        public IActionResult UpdateFootballerById(Guid id, [FromBody] Footballer footballer)
+        public async Task<IActionResult> UpdateFootballerByIdAsync(Guid id, [FromBody] Footballer footballer)
         {
             var footballerService = new FootballerService();
-            var success = footballerService.UpdateFootballerById(id, footballer);
+            var success = await footballerService.UpdateFootballerByIdAsync(id, footballer);
             return success ? Ok() : NotFound("Footballer not found.");
         }
 
         [HttpGet("getFootballerById/{id}")]
-        public IActionResult GetFootballerById(Guid id)
+        public async Task<IActionResult> GetFootballerByIdAsync(Guid id)
         {
             var footballerService = new FootballerService();
-            var footballer = footballerService.GetFootballerById(id);
+            var footballer = await footballerService.GetFootballerByIdAsync(id);
             return footballer != null ? Ok(footballer) : NotFound("Footballer not found.");
         }
 
         [HttpGet("getFootballers")]
-        public IActionResult GetFootballers()
+        public async Task<IActionResult> GetFootballersAsync()
         {
             var footballerService = new FootballerService();
-            var footballers = footballerService.GetFootballers();
+            var footballers = await footballerService.GetFootballersAsync();
             return footballers.Any() ? Ok(footballers) : NotFound("No footballers found.");
         }
     }

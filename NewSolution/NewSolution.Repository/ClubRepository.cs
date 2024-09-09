@@ -11,7 +11,7 @@ namespace NewSolution.Repository
     {
         private const string ConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=FootballClub";
 
-        public bool DeleteClubById(Guid id)
+        public async Task<bool> DeleteClubByIdAsync(Guid id)
         {
             try
             {
@@ -21,7 +21,7 @@ namespace NewSolution.Repository
                 command.Parameters.AddWithValue("@id", id);
 
                 connection.Open();
-                var numberOfCommits = command.ExecuteNonQuery();
+                var numberOfCommits = await command.ExecuteNonQueryAsync();
                 return numberOfCommits > 0;
             }
             catch (NpgsqlException)
@@ -30,7 +30,7 @@ namespace NewSolution.Repository
             }
         }
 
-        public Club GetClubById(Guid id)
+        public async Task<Club> GetClubByIdAsync(Guid id)
         {
             try
             {
@@ -40,10 +40,10 @@ namespace NewSolution.Repository
                 command.Parameters.AddWithValue("@id", id);
 
                 connection.Open();
-                using var reader = command.ExecuteReader();
-                if (reader.Read())
+                using var reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
                 {
-                    return new Club
+                    return new Club 
                     {
                         Id = reader.GetGuid(0),
                         Name = reader.GetString(1),
@@ -59,7 +59,7 @@ namespace NewSolution.Repository
             }
         }
 
-        public List<Club> GetClubs()
+        public async Task<List<Club>> GetClubsAsync()
         {
             var clubs = new List<Club>();
 
@@ -70,16 +70,14 @@ namespace NewSolution.Repository
                 using var command = new NpgsqlCommand(commandText, connection);
 
                 connection.Open();
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
+                using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
                 {
-                    clubs.Add(new Club
-                    {
-                        Id = reader.GetGuid(0),
-                        Name = reader.GetString(1),
-                        FoundationDate = reader.IsDBNull(2) ? (DateOnly?)null : DateOnly.FromDateTime(reader.GetDateTime(2)),
-                        CharacteristicColor = reader.GetString(3)
-                    });
+                    var club = new Club();
+                    club.Id = Guid.Parse(reader["Id"].ToString());
+                    club.Name = reader["Name"].ToString();
+                    club.FoundationDate = reader["FoundationDate"] != DBNull.Value ? DateOnly.FromDateTime(DateTime.Parse(reader["FoundationDate"].ToString())) : (DateOnly?)null;
+                    clubs.Add(club);
                 }
             }
             catch (NpgsqlException)
@@ -90,7 +88,7 @@ namespace NewSolution.Repository
             return clubs;
         }
 
-        public bool InsertClub(Club club)
+        public async Task<bool> InsertClubAsync(Club club)
         {
             try
             {
@@ -104,7 +102,7 @@ namespace NewSolution.Repository
                 command.Parameters.AddWithValue("@foundationDate", club.FoundationDate.HasValue ? (object)club.FoundationDate.Value : DBNull.Value);
 
                 connection.Open();
-                var numberOfCommits = command.ExecuteNonQuery();
+                var numberOfCommits = await command.ExecuteNonQueryAsync();
                 connection.Close();
 
                 return numberOfCommits > 0;
@@ -115,39 +113,37 @@ namespace NewSolution.Repository
             }
         }
 
-        public bool UpdateClubById(Guid id, Club club)
+       
+        public async Task<bool> UpdateClubByIdAsync(Guid id, Club club)
         {
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
                 connection.Open();
 
-                // Step 1: Retrieve the current club details
+                
                 var getCommandText = "SELECT \"Id\", \"Name\", \"CharacteristicColor\", \"FoundationDate\" FROM \"Club\" WHERE \"Id\" = @id;";
                 using var getCommand = new NpgsqlCommand(getCommandText, connection);
                 getCommand.Parameters.AddWithValue("@id", id);
 
-                using var reader = getCommand.ExecuteReader();
+                using var reader = await getCommand.ExecuteReaderAsync();
                 if (!reader.HasRows)
                 {
                     return false; // Club not found
                 }
 
-                // Read the current club details from the database
-                reader.Read();
-                var currentClub = new Club
-                {
-                    Id = reader.GetGuid(reader.GetOrdinal("Id")),
-                    Name = reader.GetString(reader.GetOrdinal("Name")),
-                    CharacteristicColor = reader.IsDBNull(reader.GetOrdinal("CharacteristicColor"))
-                        ? null
-                        : reader.GetString(reader.GetOrdinal("CharacteristicColor")),
-                    FoundationDate = reader.IsDBNull(reader.GetOrdinal("FoundationDate"))
-                        ? (DateOnly?)null
-                        : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("FoundationDate")))
-                };
+               
+                await reader.ReadAsync();
+                var currentClub = new Club();
 
-                // Step 2: Determine which fields need to be updated
+                currentClub.Id = Guid.Parse(reader["Id"].ToString());
+                currentClub.Name = reader["Name"].ToString();
+                currentClub.FoundationDate = reader["FoundationDate"] != DBNull.Value ? DateOnly.FromDateTime(DateTime.Parse(reader["FoundationDate"].ToString())) : (DateOnly?)null;
+                currentClub.CharacteristicColor = string.IsNullOrEmpty(reader["CharacteristicColor"].ToString()) ? null : reader["CharacteristicColor"].ToString();
+
+                connection.Close();
+
+                
                 var updateStatements = new List<string>();
                 if (!string.IsNullOrEmpty(club.Name) && club.Name != currentClub.Name)
                 {
@@ -164,17 +160,17 @@ namespace NewSolution.Repository
                     updateStatements.Add("\"FoundationDate\" = @foundationDate");
                 }
 
-                // If no fields are to be updated, return
+                
                 if (updateStatements.Count == 0)
                 {
                     return true;
                 }
 
-                // Step 3: Build and execute the update command
+                
                 var updateCommandText = $"UPDATE \"Club\" SET {string.Join(", ", updateStatements)} WHERE \"Id\" = @id;";
                 using var updateCommand = new NpgsqlCommand(updateCommandText, connection);
 
-                // Add necessary parameters
+                
                 updateCommand.Parameters.AddWithValue("@id", id);
 
                 if (updateStatements.Contains("\"Name\" = @name"))
@@ -189,10 +185,12 @@ namespace NewSolution.Repository
 
                 if (updateStatements.Contains("\"FoundationDate\" = @foundationDate"))
                 {
-                    updateCommand.Parameters.AddWithValue("@foundationDate", club.FoundationDate.Value.ToDateTime(new TimeOnly()));
+                    updateCommand.Parameters.AddWithValue("@foundationDate", club.FoundationDate);
                 }
 
-                var rowsAffected = updateCommand.ExecuteNonQuery();
+                connection.Open();
+                var rowsAffected = await updateCommand.ExecuteNonQueryAsync();
+                connection.Close();
                 return rowsAffected > 0;
             }
             catch (NpgsqlException)

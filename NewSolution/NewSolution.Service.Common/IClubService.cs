@@ -9,10 +9,10 @@ namespace NewSolution.Service.Common
 {
     public interface IClubService
     {
-        bool InsertClub(Club club);
-        bool DeleteClubById(Guid id);
-        bool UpdateClubById(Guid id, Club club);
-        Club GetClubById(Guid id);
-        List<Club> GetClubs();
+        Task<bool> InsertClubAsync(Club club);
+        Task<bool> DeleteClubByIdAsync(Guid id);
+        Task<bool> UpdateClubByIdAsync(Guid id, Club club);
+        Task<Club> GetClubByIdAsync(Guid id);
+        Task<List<Club>> GetClubsAsync();
     }
 }

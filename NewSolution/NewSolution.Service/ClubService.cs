@@ -12,39 +12,39 @@ namespace NewSolution.Service
     public class ClubService : IClubService
     {
         public ClubService() { }
-        public bool DeleteClubById(Guid id)
+        public async Task<bool> DeleteClubByIdAsync(Guid id)
         {
             ClubRepository clubRepository = new ClubRepository();
-            return clubRepository.DeleteClubById(id);
+            return await clubRepository.DeleteClubByIdAsync(id);
         }
 
-        public Club GetClubById(Guid id)
+        public async Task<Club> GetClubByIdAsync(Guid id)
         {
             ClubRepository clubRepository = new ClubRepository();
-            return clubRepository.GetClubById(id);
+            return await clubRepository.GetClubByIdAsync(id);
         }
 
-        public List<Club> GetClubs()
+        public async Task<List<Club>> GetClubsAsync()
         {
             ClubRepository clubRepository = new ClubRepository();
-            return clubRepository.GetClubs();
+            return await clubRepository.GetClubsAsync();
         }
 
-        public bool InsertClub(Club club)
+        public async Task<bool> InsertClubAsync(Club club)
         {
             ClubRepository clubRepository = new ClubRepository();
-            return clubRepository.InsertClub(club);
+            return await clubRepository.InsertClubAsync(club);
         }
 
 
-        public bool UpdateClubById(Guid id, Club club)
+        public async Task<bool> UpdateClubByIdAsync(Guid id, Club club)
         {
             ClubRepository clubRepository = new ClubRepository();
-            if (Object.ReferenceEquals(clubRepository.GetClubById(id), null))
+            if (Object.ReferenceEquals(clubRepository.GetClubByIdAsync(id), null))
             {
                 return false;
             }
-            return clubRepository.UpdateClubById(id, club);
+            return await clubRepository.UpdateClubByIdAsync(id, club);
         }
     }
 }

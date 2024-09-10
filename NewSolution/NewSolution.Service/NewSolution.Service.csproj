@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autofac" Version="8.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NewSolution.Model\NewSolution.Model.csproj" />
     <ProjectReference Include="..\NewSolution.Repository.Common\NewSolution.Repository.Common.csproj" />
     <ProjectReference Include="..\NewSolution.Repository\NewSolution.Repository.csproj" />

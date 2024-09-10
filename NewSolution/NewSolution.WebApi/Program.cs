@@ -13,10 +13,8 @@ builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
-    containerBuilder.RegisterType<FootballerService>().As<IFootballerService>().InstancePerDependency();
-    containerBuilder.RegisterType<FootballerRepository>().As<IFootballerRepository>().InstancePerDependency();
-    containerBuilder.RegisterType<ClubService>().As<IClubService>().InstancePerDependency();
-    containerBuilder.RegisterType<ClubRepository>().As<IClubRepository>().InstancePerDependency();
+    containerBuilder.RegisterModule(new ServiceDIModule());
+    containerBuilder.RegisterModule(new RepositoryDIModule());
 });
 
 // Add services to the container.

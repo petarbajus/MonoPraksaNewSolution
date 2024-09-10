@@ -9,34 +9,38 @@ namespace NewSolution.Service
 {
     public class FootballerService : IFootballerService
     {
+
+        private IFootballerRepository _footballerRepository;
+
+        public FootballerService(IFootballerRepository footballerRepository)
+        {
+            this._footballerRepository = footballerRepository;
+        }
+
         public async Task<bool> InsertFootballerAsync(Footballer footballer)
         {
-            FootballerRepository footballerRepository = new FootballerRepository();
-            return await footballerRepository.InsertFootballerAsync(footballer);
+            footballer.Id = Guid.NewGuid();
+            return await _footballerRepository.InsertFootballerAsync(footballer);
         }
 
         public async Task<bool> DeleteFootballerByIdAsync(Guid id)
         {
-            IFootballerRepository footballerRepository = new FootballerRepository();
-            return await footballerRepository.DeleteFootballerByIdAsync(id);
+            return await _footballerRepository.DeleteFootballerByIdAsync(id);
         }
 
         public async Task<bool> UpdateFootballerByIdAsync(Guid id, Footballer footballer)
         {
-            IFootballerRepository footballerRepository = new FootballerRepository();
-            return await footballerRepository.UpdateFootballerByIdAsync(id, footballer);
+            return await _footballerRepository.UpdateFootballerByIdAsync(id, footballer);
         }
 
         public async Task<Footballer> GetFootballerByIdAsync(Guid id)
         {
-            IFootballerRepository footballerRepository = new FootballerRepository();
-            return await footballerRepository.GetFootballerByIdAsync(id);
+            return await _footballerRepository.GetFootballerByIdAsync(id);
         }
 
         public async Task<List<Footballer>> GetFootballersAsync()
         {
-            IFootballerRepository footballerRepository = new FootballerRepository();
-            return await footballerRepository.GetFootballersAsync();
+            return await _footballerRepository.GetFootballersAsync();
         }
     }
 }

@@ -1,4 +1,23 @@
+using Autofac.Core;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using NewSolution.Service;
+using NewSolution.Service.Common;
+using NewSolution.WebApi.Controllers;
+using NewSolution.Repository;
+using NewSolution.Repository.Common;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+    containerBuilder.RegisterType<FootballerService>().As<IFootballerService>().InstancePerDependency();
+    containerBuilder.RegisterType<FootballerRepository>().As<IFootballerRepository>().InstancePerDependency();
+    containerBuilder.RegisterType<ClubService>().As<IClubService>().InstancePerDependency();
+    containerBuilder.RegisterType<ClubRepository>().As<IClubRepository>().InstancePerDependency();
+});
 
 // Add services to the container.
 

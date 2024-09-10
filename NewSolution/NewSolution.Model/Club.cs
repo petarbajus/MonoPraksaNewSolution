@@ -13,10 +13,10 @@ namespace NewSolution.Model
         public string? CharacteristicColor { get; set; }
         public DateOnly? FoundationDate { get; set; }
 
+        public List<Footballer>? Footballers { get; set; }
 
         public Club()
         {
-
         }
         public Club(string? name, string? characteristicColor, DateOnly? foundationDate)
         {

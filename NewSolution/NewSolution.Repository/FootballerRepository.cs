@@ -1,16 +1,13 @@
 ﻿using NewSolution.Model;
 using NewSolution.Repository.Common;
 using Npgsql;
+using System.ComponentModel.DataAnnotations;
 
 namespace NewSolution.Repository
 {
     public class FootballerRepository : IFootballerRepository
     {
         private const string ConnectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=FootballClub";
-        public FootballerRepository()
-        {
-            
-        }
 
         public async Task<bool> DeleteFootballerByIdAsync(Guid id)
         {
@@ -32,12 +29,21 @@ namespace NewSolution.Repository
             }
         }
 
-        public async Task<Footballer> GetFootballerByIdAsync(Guid id)
+        public async Task<Footballer> GetFootballerByIdAsync([Required] Guid id)
         {
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
-                var commandText = "SELECT * FROM \"Footballer\" WHERE \"Id\" = @id;";
+
+                // SQL query to join Footballer and Club tables
+                var commandText = @"
+                SELECT f.""Id"" AS FootballerId, f.""Name"" AS FootballerName, f.""DOB"", f.""ClubId"",
+                 c.""Id"" AS ClubId, c.""Name"" AS ClubName, c.""FoundationDate"", c.""CharacteristicColor""
+                FROM ""Footballer"" f
+                LEFT JOIN ""Club"" c ON f.""ClubId"" = c.""Id""
+                WHERE f.""Id"" = @id;";
+
+
                 using var command = new NpgsqlCommand(commandText, connection);
                 command.Parameters.AddWithValue("@id", id);
 
@@ -45,31 +51,46 @@ namespace NewSolution.Repository
                 using var reader = await command.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
-                    return new Footballer
+                    // Map footballer and club data
+                    var footballer = new Footballer
                     {
-                        Id = reader.GetGuid(0),
-                        Name = reader.GetString(1),
-                        DOB = reader.IsDBNull(2) ? (DateOnly?)null : DateOnly.FromDateTime(reader.GetDateTime(2)),
-                        ClubId = reader.GetGuid(3)
+                        Id = reader.GetGuid(reader.GetOrdinal("FootballerId")),
+                        Name = reader.GetString(reader.GetOrdinal("FootballerName")),
+                        DOB = reader.IsDBNull(reader.GetOrdinal("DOB")) ? (DateOnly?)null : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("DOB"))),
+                        ClubId = reader.IsDBNull(reader.GetOrdinal("ClubId")) ? null : reader.GetGuid(reader.GetOrdinal("ClubId")),
+                        Club = new Club
+                        {
+                            Id = reader.IsDBNull(reader.GetOrdinal("ClubId")) ? Guid.Empty : reader.GetGuid(reader.GetOrdinal("ClubId")),
+                            Name = reader.IsDBNull(reader.GetOrdinal("ClubName")) ? null : reader.GetString(reader.GetOrdinal("ClubName")),
+                            FoundationDate = reader.IsDBNull(reader.GetOrdinal("FoundationDate")) ? (DateOnly?)null : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("FoundationDate"))),
+                            CharacteristicColor = reader.IsDBNull(reader.GetOrdinal("CharacteristicColor")) ? null : reader.GetString(reader.GetOrdinal("CharacteristicColor"))
+                        }
                     };
+                    return footballer;
                 }
-              
-                return null;
-            }
-            catch (NpgsqlException)
-            {
-                return null;
-            }
-        }
 
-        public async Task<List<Footballer>> GetFootballersAsync()
+                return null;
+            }
+            catch (NpgsqlException ex)
+            {
+
+                return null;
+            }
+
+        }
+            public async Task<List<Footballer>> GetFootballersAsync()
         {
             var footballers = new List<Footballer>();
 
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
-                var commandText = "SELECT * FROM \"Footballer\";";
+                string commandText = @"
+                SELECT f.*, c.""Name"" AS ClubName, c.""FoundationDate"", c.""CharacteristicColor""
+                FROM ""Footballer"" f
+                LEFT JOIN ""Club"" c ON f.""ClubId"" = c.""Id"";";
+
+
                 using var command = new NpgsqlCommand(commandText, connection);
 
                 connection.Open();
@@ -77,21 +98,50 @@ namespace NewSolution.Repository
                 while (reader.Read())
                 {
                     var footballer = new Footballer();
-                    footballer.Id = Guid.Parse(reader["Id"].ToString());
-                    footballer.Name = reader["Name"].ToString();
-                    footballer.DOB = reader["DOB"] != DBNull.Value ? DateOnly.FromDateTime(DateTime.Parse(reader["DOB"].ToString())) : (DateOnly?)null;
-                    footballer.ClubId = string.IsNullOrEmpty(reader["ClubId"].ToString()) ? null : Guid.Parse(reader["ClubId"].ToString());
+
+                    footballer.Id = reader.GetGuid(0);
+
+                    footballer.Name = reader.IsDBNull(1) ? null : reader.GetString(1);
+
+                    if (!reader.IsDBNull(2))  // Index 2 should be the column index for DOB
+                    {
+                        footballer.DOB = DateOnly.FromDateTime(reader.GetDateTime(2));
+                    }
+                    else
+                    {
+                        footballer.DOB = null;
+                    }
+
+                    footballer.ClubId = reader.IsDBNull(3) ? null : (Guid?)reader.GetGuid(3);
+
+                    footballer.Club = new Club();
+
+                    footballer.Club.Name = reader.IsDBNull(4) ? null : reader.GetString(4);
+
+                    if (!reader.IsDBNull(5)) 
+                    {
+                        footballer.Club.FoundationDate = DateOnly.FromDateTime(reader.GetDateTime(5));
+                    }
+                    else
+                    {
+                        footballer.Club.FoundationDate = null;
+                    }
+
+                    footballer.Club.CharacteristicColor = reader.IsDBNull(6) ? null : reader.GetString(6); 
+
                     footballers.Add(footballer);
                 }
                 connection.Close();
             }
             catch (NpgsqlException)
             {
+                // Log the exception or handle it as necessary
                 return null;
             }
 
             return footballers;
         }
+
 
         public async Task<bool> InsertFootballerAsync(Footballer footballer)
         {
@@ -101,36 +151,56 @@ namespace NewSolution.Repository
                 var commandText = "INSERT INTO \"Footballer\" (\"Id\", \"Name\", \"DOB\", \"ClubId\") VALUES (@id, @name, @dob, @clubId);";
 
                 using var command = new NpgsqlCommand(commandText, connection);
-                command.Parameters.AddWithValue("@id", NpgsqlTypes.NpgsqlDbType.Uuid, Guid.NewGuid());
+                command.Parameters.AddWithValue("@id", footballer.Id);
                 command.Parameters.AddWithValue("@name", footballer.Name ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("@dob", footballer.DOB.HasValue ? footballer.DOB.Value : DBNull.Value);
-                var clubIdParam = new NpgsqlParameter("@clubId", NpgsqlTypes.NpgsqlDbType.Uuid);
-                if (footballer.ClubId == Guid.Empty || footballer.ClubId == null)
+
+                if (footballer.ClubId == null || footballer.ClubId == Guid.Empty)
                 {
-                    clubIdParam.Value = DBNull.Value;
+                    command.Parameters.AddWithValue("@clubId", DBNull.Value);
                 }
                 else
                 {
-                    clubIdParam.Value = footballer.ClubId;
+                    command.Parameters.AddWithValue("@clubId", footballer.ClubId);
                 }
-                command.Parameters.Add(clubIdParam);
-
-
 
                 connection.Open();
-                var numberOfCommits = await command.ExecuteNonQueryAsync();
-                connection.Close();
+                var numberOfCommits = await command.ExecuteNonQueryAsync();  // Execute the insert command
 
+                //If a ClubId is specified, fetch the club details after the footballer has been inserted
+                /*footballer.Club = new Club();
+
+                if (footballer.ClubId != null && footballer.ClubId != Guid.Empty)
+                {
+                    var getClubCommandText = "SELECT \"Id\", \"Name\", \"FoundationDate\", \"CharacteristicColor\" FROM \"Club\" WHERE \"Id\" = @clubId;";
+                    using var getCommand = new NpgsqlCommand(getClubCommandText, connection);
+                    getCommand.Parameters.AddWithValue("@clubId", footballer.ClubId);
+
+                    using var reader = await getCommand.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
+                    {
+                        footballer.Club = new Club
+                        {
+                            Id = reader.GetGuid(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            FoundationDate = reader.IsDBNull(reader.GetOrdinal("FoundationDate")) ? (DateOnly?)null : DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("FoundationDate"))),
+                            CharacteristicColor = reader.IsDBNull(reader.GetOrdinal("CharacteristicColor")) ? null : reader.GetString(reader.GetOrdinal("CharacteristicColor"))
+                        };
+                    }
+                }*/
+
+                connection.Close();
                 return numberOfCommits > 0;
             }
             catch (NpgsqlException)
             {
-             
+                // Handle the exception accordingly
                 return false;
             }
         }
 
-       
+
+
 
 
         public async Task<bool> UpdateFootballerByIdAsync(Guid id, Footballer footballer)

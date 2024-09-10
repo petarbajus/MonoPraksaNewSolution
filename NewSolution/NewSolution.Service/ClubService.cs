@@ -1,5 +1,6 @@
 ﻿using NewSolution.Model;
 using NewSolution.Repository;
+using NewSolution.Repository.Common;
 using NewSolution.Service.Common;
 using System;
 using System.Collections.Generic;
@@ -11,40 +12,43 @@ namespace NewSolution.Service
 {
     public class ClubService : IClubService
     {
-        public ClubService() { }
+        private IClubRepository _clubRepository;
+        public ClubService(IClubRepository clubRepository) {
+            _clubRepository = clubRepository;
+        }
         public async Task<bool> DeleteClubByIdAsync(Guid id)
         {
-            ClubRepository clubRepository = new ClubRepository();
-            return await clubRepository.DeleteClubByIdAsync(id);
+
+            return await _clubRepository.DeleteClubByIdAsync(id);
         }
 
         public async Task<Club> GetClubByIdAsync(Guid id)
         {
-            ClubRepository clubRepository = new ClubRepository();
-            return await clubRepository.GetClubByIdAsync(id);
+            
+            return await _clubRepository.GetClubByIdAsync(id);
         }
 
         public async Task<List<Club>> GetClubsAsync()
         {
-            ClubRepository clubRepository = new ClubRepository();
-            return await clubRepository.GetClubsAsync();
+            
+            return await _clubRepository.GetClubsAsync();
         }
 
         public async Task<bool> InsertClubAsync(Club club)
         {
-            ClubRepository clubRepository = new ClubRepository();
-            return await clubRepository.InsertClubAsync(club);
+            club.Id = Guid.NewGuid();
+            return await _clubRepository.InsertClubAsync(club);
         }
 
 
         public async Task<bool> UpdateClubByIdAsync(Guid id, Club club)
         {
-            ClubRepository clubRepository = new ClubRepository();
-            if (Object.ReferenceEquals(clubRepository.GetClubByIdAsync(id), null))
+            
+            if (Object.ReferenceEquals(_clubRepository.GetClubByIdAsync(id), null))
             {
                 return false;
             }
-            return await clubRepository.UpdateClubByIdAsync(id, club);
+            return await _clubRepository.UpdateClubByIdAsync(id, club);
         }
     }
 }

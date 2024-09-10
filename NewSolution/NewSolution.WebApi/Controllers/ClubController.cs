@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewSolution.Model;
 using NewSolution.Service;
+using NewSolution.Service.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace NewSolution.WebApi.Controllers
 {
@@ -8,10 +10,15 @@ namespace NewSolution.WebApi.Controllers
     [Route("api/[controller]")]
     public class ClubController : ControllerBase
     {
+        private IClubService _clubService;
+        
+        public ClubController(IClubService clubService) { 
+            _clubService = clubService;
+        }
+
         [HttpPost("insertClub")]
         public async Task<IActionResult>  InsertClubAsync([FromBody] Club club)
         {
-            var clubService = new ClubService();
 
             if (club == null)
             {
@@ -23,43 +30,39 @@ namespace NewSolution.WebApi.Controllers
                 return BadRequest("Club name is missing.");
             }
 
-            var success = await clubService.InsertClubAsync(club);
+            var success = await _clubService.InsertClubAsync(club);
             return success ? Ok() : BadRequest("Failed to insert club.");
         }
 
         [HttpDelete("deleteClubById/{id}")]
         public async Task<IActionResult> DeleteClubByIdAsync(Guid id)
         {
-            var clubService = new ClubService();
 
-            var success = await clubService.DeleteClubByIdAsync(id);
+            var success = await _clubService.DeleteClubByIdAsync(id);
             return success ? Ok() : NotFound("Club not found.");
         }
 
         [HttpPut("updateClubById/{id}")]
-        public async Task<IActionResult> UpdateClubByIdAsync(Guid id, [FromBody] Club club)
+        public async Task<IActionResult> UpdateClubByIdAsync( [Required] Guid id, [FromBody] Club club)
         {
-            var clubService = new ClubService();
 
-            var success = await clubService.UpdateClubByIdAsync(id, club);
+            var success = await _clubService.UpdateClubByIdAsync(id, club);
             return success ? Ok() : NotFound("Club not found.");
         }
 
         [HttpGet("getClubById/{id}")]
-        public async Task<IActionResult> GetClubByIdAsync(Guid id)
+        public async Task<IActionResult> GetClubByIdAsync([Required] Guid id)
         {
-            var clubService = new ClubService();
-
-            var club = await clubService.GetClubByIdAsync(id);
+           
+            var club = await _clubService.GetClubByIdAsync(id);
             return club != null ? Ok(club) : NotFound("Club not found.");
         }
 
         [HttpGet("getClubs")]
         public async Task<IActionResult> GetClubsAsync()
         {
-            var clubService = new ClubService();
-
-            var clubs = await clubService.GetClubsAsync();
+            
+            var clubs = await _clubService.GetClubsAsync();
             return  clubs != null && clubs.Any() ? Ok(clubs) : NotFound("No clubs found.");
         }
     }

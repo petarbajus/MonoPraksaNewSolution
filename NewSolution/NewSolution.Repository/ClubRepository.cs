@@ -116,7 +116,7 @@ namespace NewSolution.Repository
                 // Start the WHERE clause to prevent syntax errors
                 commandText.Append("WHERE 1=1 ");
 
-                // Apply filters
+                
                 if (!string.IsNullOrEmpty(clubFilter.SearchQuery))
                 {
                     commandText.Append("AND c.\"Name\" ILIKE @SearchQuery ");
@@ -137,7 +137,6 @@ namespace NewSolution.Repository
                     commandText.Append("AND c.\"FoundationDate\" <= @DateOfFoundationTo ");
                 }
 
-                // Apply sorting
                 if (!string.IsNullOrEmpty(sorting.SortBy))
                 {
                     commandText.Append("ORDER BY ");

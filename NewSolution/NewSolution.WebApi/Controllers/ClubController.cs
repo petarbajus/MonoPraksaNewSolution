@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using System.Net.NetworkInformation;
+using NewSolution.WebApi.RestModels;
 
 namespace NewSolution.WebApi.Controllers
 {
@@ -20,21 +21,22 @@ namespace NewSolution.WebApi.Controllers
         }
 
         [HttpPost("insertClub")]
-        public async Task<IActionResult>  InsertClubAsync([FromBody] Club club)
+        public async Task<IActionResult> InsertClubAsync([FromBody] ClubAddModel clubAddModel)
         {
-
-            if (club == null)
+            if (clubAddModel == null || string.IsNullOrEmpty(clubAddModel.Name))
             {
-                return BadRequest("Club object is null.");
+                return BadRequest("Club name is required.");
             }
 
-            if (string.IsNullOrEmpty(club.Name))
+            var club = new Club
             {
-                return BadRequest("Club name is missing.");
-            }
+                Name = clubAddModel.Name,
+                CharacteristicColor = clubAddModel.CharacteristicColor,
+                FoundationDate = clubAddModel.FoundationDate
+            };
 
             var success = await _clubService.InsertClubAsync(club);
-            return success ? Ok() : BadRequest("Failed to insert club.");
+            return success ? Ok("Club added successfully.") : BadRequest("Failed to insert club.");
         }
 
         [HttpDelete("deleteClubById/{id}")]
@@ -46,11 +48,21 @@ namespace NewSolution.WebApi.Controllers
         }
 
         [HttpPut("updateClubById/{id}")]
-        public async Task<IActionResult> UpdateClubByIdAsync( [Required] Guid id, [FromBody] Club club)
+        public async Task<IActionResult> UpdateClubByIdAsync( [Required] Guid id, [FromBody] ClubUpdateModel clubUpdateModel)
         {
+            if (clubUpdateModel == null)
+            {
+                return BadRequest("Club object is null.");
+            }
+
+            var club = new Club();
+            club.Name = clubUpdateModel.Name;
+            club.CharacteristicColor = clubUpdateModel.CharacteristicColor;
+            club.FoundationDate = clubUpdateModel.FoundationDate;
+
 
             var success = await _clubService.UpdateClubByIdAsync(id, club);
-            return success ? Ok() : NotFound("Club not found.");
+            return success ? Ok("Club Updated") : NotFound("Failed to update club");
         }
 
         [HttpGet("getClubById/{id}")]
@@ -58,12 +70,22 @@ namespace NewSolution.WebApi.Controllers
         {
            
             var club = await _clubService.GetClubByIdAsync(id);
-            return club != null ? Ok(club) : NotFound("Club not found.");
+
+            var clubGetModel = new ClubGetModel
+            {
+                Name = club.Name,
+                CharacteristicColor = club.CharacteristicColor,
+                FoundationDate = club.FoundationDate,
+                footballerNames = club.Footballers?.Select(f => f.Name).ToList() 
+            };
+
+
+            return clubGetModel != null ? Ok(clubGetModel) : NotFound("Club not found.");
         }
 
         [HttpGet("getClubs")]
         public async Task<IActionResult> GetClubsAsync(string searchQuery = "", string characteristicColor = "", DateOnly? dateOfFoundationFrom = null, DateOnly? dateOfFoundationTo = null,
-            string sortBy = "", string sortDirection = "", int recordsPerPage = 10, int currentPage = 1)
+            string sortBy = "ClubId", string sortDirection = "DESC", int recordsPerPage = 10, int currentPage = 1)
         {
 
             ClubFilter clubFilter = new ClubFilter
@@ -87,7 +109,16 @@ namespace NewSolution.WebApi.Controllers
             };
 
             var clubs = await _clubService.GetClubsAsync(clubFilter, paging, sorting);
-            return  clubs != null && clubs.Any() ? Ok(clubs) : NotFound("No clubs found.");
+
+            var clubGetModels = clubs.Select(c => new ClubGetModel
+            {
+                Name = c.Name,
+                CharacteristicColor = c.CharacteristicColor,
+                FoundationDate = c.FoundationDate,
+                footballerNames = c.Footballers?.Select(f => f.Name).ToList()  // Adding footballer names
+            }).ToList();
+
+            return clubGetModels != null && clubGetModels.Any() ? Ok(clubGetModels) : NotFound("No clubs found.");
         }
     }
 }

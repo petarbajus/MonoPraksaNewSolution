@@ -3,6 +3,7 @@ using NewSolution.Common;
 using NewSolution.Model;
 using NewSolution.Service;
 using NewSolution.Service.Common;
+using NewSolution.WebApi.RestModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -22,12 +23,21 @@ namespace NewSolution.WebApi.Controllers
         }
 
         [HttpPost("insertFootballer")]
-        public async Task<IActionResult> InsertFootballerAsync([FromBody] Footballer footballer)
+        public async Task<IActionResult> InsertFootballerAsync([FromBody] FootballerAddModel footballerAdd)
         {
-            if (footballer == null)
+
+            if (footballerAdd == null)
             {
                 return BadRequest("Footballer object is null.");
             }
+
+            var footballer = new Footballer();
+
+            footballer.Name = footballerAdd.Name;
+            footballer.DOB = footballerAdd.DOB;
+            footballer.ClubId = footballerAdd.ClubId;
+
+
 
             var success = await _footballerService.InsertFootballerAsync(footballer);
             return success ? Ok() : BadRequest("Failed to insert footballer.");
@@ -41,8 +51,18 @@ namespace NewSolution.WebApi.Controllers
         }
 
         [HttpPut("updateFootballerById/{id}")]
-        public async Task<IActionResult> UpdateFootballerByIdAsync([Required] Guid id, [FromBody] Footballer footballer)
+        public async Task<IActionResult> UpdateFootballerByIdAsync([Required] Guid id, [FromBody] FootballerUpdateModel footballerUpdateModel)
         {
+            if (footballerUpdateModel == null)
+            {
+                return BadRequest("Footballer object is null.");
+            }
+
+            var footballer = new Footballer();
+
+            footballer.Name = footballerUpdateModel.Name;
+            footballer.ClubId = footballerUpdateModel.ClubId;
+
             var success = await _footballerService.UpdateFootballerByIdAsync(id, footballer);
             return success ? Ok() : NotFound("Footballer not found.");
         }
@@ -51,12 +71,24 @@ namespace NewSolution.WebApi.Controllers
         public async Task<IActionResult> GetFootballerByIdAsync([Required] Guid id)
         {
             var footballer = await _footballerService.GetFootballerByIdAsync(id);
-            return footballer != null ? Ok(footballer) : NotFound("Footballer not found.");
+
+            if (footballer == null)
+            {
+                return NotFound();
+            }
+
+            var footballerGetModel = new FootballerGetModel
+            {
+                Name = footballer.Name,
+                DOB = footballer.DOB,
+                ClubName = footballer.Club?.Name
+            };
+            return Ok(footballerGetModel); ;
         }
 
         [HttpGet("getFootballers")]
         public async Task<IActionResult> GetFootballersAsync(string searchQuery = "", DateOnly? DOBFrom = null, DateOnly? DOBTo = null,
-            Guid? clubId = null, string sortBy = "", string sortDirection = "", int recordsPerPage = 10, int currentPage = 1)
+            Guid? clubId = null, string sortBy = "FootballerId", string sortDirection = "DESC", int recordsPerPage = 10, int currentPage = 1)
         {
             FootballerFilter footballerFilter = new FootballerFilter
             {
@@ -79,7 +111,15 @@ namespace NewSolution.WebApi.Controllers
             };
 
             var footballers = await _footballerService.GetFootballersAsync(footballerFilter, paging, sorting);
-            return footballers.Any() ? Ok(footballers) : NotFound("No footballers found.");
+
+            var footballerGetModels = footballers.Select(f => new FootballerGetModel
+            {
+                Name = f.Name,
+                DOB = f.DOB,
+                ClubName = f.Club?.Name
+            }).ToList();
+
+            return footballerGetModels.Any() ? Ok(footballerGetModels) : NotFound("No footballers found.");
         }
     }
 }

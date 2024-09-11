@@ -1,4 +1,5 @@
-﻿using NewSolution.Model;
+﻿using NewSolution.Common;
+using NewSolution.Model;
 using NewSolution.Repository;
 using NewSolution.Repository.Common;
 using NewSolution.Service.Common;
@@ -28,10 +29,9 @@ namespace NewSolution.Service
             return await _clubRepository.GetClubByIdAsync(id);
         }
 
-        public async Task<List<Club>> GetClubsAsync()
+        public async Task<List<Club>> GetClubsAsync(ClubFilter clubFilter, Paging paging, Sorting sorting)
         {
-            
-            return await _clubRepository.GetClubsAsync();
+            return await _clubRepository.GetClubsAsync(clubFilter, paging, sorting);
         }
 
         public async Task<bool> InsertClubAsync(Club club)

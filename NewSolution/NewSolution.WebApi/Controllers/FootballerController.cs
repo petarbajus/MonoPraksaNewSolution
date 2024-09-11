@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NewSolution.Common;
 using NewSolution.Model;
 using NewSolution.Service;
 using NewSolution.Service.Common;
@@ -54,9 +55,30 @@ namespace NewSolution.WebApi.Controllers
         }
 
         [HttpGet("getFootballers")]
-        public async Task<IActionResult> GetFootballersAsync()
+        public async Task<IActionResult> GetFootballersAsync(string searchQuery = "", DateOnly? DOBFrom = null, DateOnly? DOBTo = null,
+            Guid? clubId = null, string sortBy = "", string sortDirection = "", int recordsPerPage = 10, int currentPage = 1)
         {
-            var footballers = await _footballerService.GetFootballersAsync();
+            FootballerFilter footballerFilter = new FootballerFilter
+            {
+                SearchQuery = searchQuery,
+                DOBFrom = DOBFrom,
+                DOBTo = DOBTo,
+                ClubId = clubId
+            };
+
+            Sorting sorting = new Sorting
+            {
+                SortBy = sortBy,
+                SortDirection = sortDirection
+            };
+
+            Paging paging = new Paging
+            {
+                RecordsPerPage = recordsPerPage,
+                CurrentPage = currentPage
+            };
+
+            var footballers = await _footballerService.GetFootballersAsync(footballerFilter, paging, sorting);
             return footballers.Any() ? Ok(footballers) : NotFound("No footballers found.");
         }
     }

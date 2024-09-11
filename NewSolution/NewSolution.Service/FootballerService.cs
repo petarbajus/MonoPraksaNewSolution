@@ -1,4 +1,5 @@
-﻿using NewSolution.Model;
+﻿using NewSolution.Common;
+using NewSolution.Model;
 using NewSolution.Repository;
 using NewSolution.Repository.Common;
 using NewSolution.Service.Common;
@@ -38,9 +39,9 @@ namespace NewSolution.Service
             return await _footballerRepository.GetFootballerByIdAsync(id);
         }
 
-        public async Task<List<Footballer>> GetFootballersAsync()
+        public async Task<List<Footballer>> GetFootballersAsync(FootballerFilter footballerFilter, Paging paging, Sorting sorting)
         {
-            return await _footballerRepository.GetFootballersAsync();
+            return await _footballerRepository.GetFootballersAsync(footballerFilter, paging, sorting);
         }
     }
 }

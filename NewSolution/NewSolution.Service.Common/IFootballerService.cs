@@ -1,4 +1,5 @@
-﻿using NewSolution.Model;
+﻿using NewSolution.Common;
+using NewSolution.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,6 @@ namespace NewSolution.Service.Common
         Task<bool> DeleteFootballerByIdAsync(Guid id);
         Task<bool> UpdateFootballerByIdAsync(Guid id, Footballer footballer);
         Task<Footballer> GetFootballerByIdAsync(Guid id);
-        Task<List<Footballer>> GetFootballersAsync();
+        Task<List<Footballer>> GetFootballersAsync(FootballerFilter footballerFilter, Paging paging, Sorting sorting);
     }
 }

@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NewSolution.Common\NewSolution.Common.csproj" />
     <ProjectReference Include="..\NewSolution.Model\NewSolution.Model.csproj" />
     <ProjectReference Include="..\NewSolution.Repository.Common\NewSolution.Repository.Common.csproj" />
   </ItemGroup>

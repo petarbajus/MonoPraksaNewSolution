@@ -1,7 +1,9 @@
-﻿using NewSolution.Model;
+﻿using NewSolution.Common;
+using NewSolution.Model;
 using NewSolution.Repository.Common;
 using Npgsql;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 
 namespace NewSolution.Repository
 {
@@ -78,20 +80,97 @@ namespace NewSolution.Repository
             }
 
         }
-            public async Task<List<Footballer>> GetFootballersAsync()
+            public async Task<List<Footballer>> GetFootballersAsync(FootballerFilter footballerFilter, Paging paging, Sorting sorting)
         {
             var footballers = new List<Footballer>();
 
             try
             {
                 using var connection = new NpgsqlConnection(ConnectionString);
-                string commandText = @"
-                SELECT f.*, c.""Name"" AS ClubName, c.""FoundationDate"", c.""CharacteristicColor""
-                FROM ""Footballer"" f
-                LEFT JOIN ""Club"" c ON f.""ClubId"" = c.""Id"";";
+                var commandText = new StringBuilder();
 
 
-                using var command = new NpgsqlCommand(commandText, connection);
+                commandText.Append("SELECT f.\"Id\" AS FootballerId, f.\"Name\" AS FootballerName, f.\"DOB\", f.\"ClubId\", ");
+                commandText.Append("c.\"Name\" AS ClubName, c.\"FoundationDate\", c.\"CharacteristicColor\" ");
+                commandText.Append("FROM \"Footballer\" f ");
+                commandText.Append("LEFT JOIN \"Club\" c ON f.\"ClubId\" = c.\"Id\" ");
+
+
+
+                // Start the WHERE clause for filtering
+                commandText.Append("WHERE 1=1 ");
+
+                // Apply filters (based on FootballerFilter if provided)
+                if (!string.IsNullOrEmpty(footballerFilter.SearchQuery))
+                {
+                    commandText.Append("AND f.\"Name\" ILIKE @SearchQuery ");
+                }
+
+                if (footballerFilter.DOBFrom.HasValue)
+                {
+                    commandText.Append("AND f.\"DOB\" >= @DateOfBirthFrom ");
+                }
+
+                if (footballerFilter.DOBTo.HasValue)
+                {
+                    commandText.Append("AND f.\"DOB\" <= @DateOfBirthTo ");
+                }
+
+                if (footballerFilter.ClubId.HasValue)
+                {
+                    commandText.Append("AND f.\"ClubId\" = @ClubId ");
+                }
+
+                if (!string.IsNullOrEmpty(sorting.SortBy))
+                {
+                    commandText.Append("ORDER BY ");
+                    commandText.Append($"{sorting.SortBy}");
+
+                    if (!string.IsNullOrEmpty(sorting.SortDirection) &&
+                        (string.Equals(sorting.SortDirection, "asc", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(sorting.SortDirection, "desc", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        commandText.Append($" {sorting.SortDirection.ToUpper()} ");
+                    }
+                    else
+                    {
+                        commandText.Append(" ASC ");  // Default to ASC if no valid SortDirection is provided
+                    }
+                }
+
+                // Apply pagination
+                if (paging.RecordsPerPage > 0)
+                {
+                    commandText.Append("LIMIT @RecordsPerPage OFFSET @Offset ");
+                }
+
+                using var command = new NpgsqlCommand(commandText.ToString(), connection);
+
+                if (!string.IsNullOrEmpty(footballerFilter.SearchQuery))
+                {
+                    command.Parameters.AddWithValue("@SearchQuery", $"%{footballerFilter.SearchQuery}%");
+                }
+
+                if (footballerFilter.DOBFrom.HasValue)
+                {
+                    command.Parameters.AddWithValue("@DateOfBirthFrom", footballerFilter.DOBFrom.Value);
+                }
+
+                if (footballerFilter.DOBTo.HasValue)
+                {
+                    command.Parameters.AddWithValue("@DateOfBirthTo", footballerFilter.DOBTo.Value);
+                }
+
+                if (footballerFilter.ClubId.HasValue)
+                {
+                    command.Parameters.AddWithValue("@ClubId", footballerFilter.ClubId.Value);
+                }
+
+                if (paging.RecordsPerPage > 0)
+                {
+                    command.Parameters.AddWithValue("@RecordsPerPage", paging.RecordsPerPage);
+                    command.Parameters.AddWithValue("@Offset", (paging.CurrentPage - 1) * paging.RecordsPerPage);
+                }
 
                 connection.Open();
                 using var reader = await command.ExecuteReaderAsync();

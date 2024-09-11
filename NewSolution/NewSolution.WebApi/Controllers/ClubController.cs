@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NewSolution.Model;
-using NewSolution.Service;
 using NewSolution.Service.Common;
+using NewSolution.Common;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using Microsoft.AspNetCore.SignalR;
+using System.Net.NetworkInformation;
 
 namespace NewSolution.WebApi.Controllers
 {
@@ -59,10 +62,31 @@ namespace NewSolution.WebApi.Controllers
         }
 
         [HttpGet("getClubs")]
-        public async Task<IActionResult> GetClubsAsync()
+        public async Task<IActionResult> GetClubsAsync(string searchQuery = "", string characteristicColor = "", DateOnly? dateOfFoundationFrom = null, DateOnly? dateOfFoundationTo = null,
+            string sortBy = "", string sortDirection = "", int recordsPerPage = 10, int currentPage = 1)
         {
-            
-            var clubs = await _clubService.GetClubsAsync();
+
+            ClubFilter clubFilter = new ClubFilter
+            {
+                SearchQuery = searchQuery,
+                CharacteristicColor = characteristicColor,
+                DateOfFoundationFrom = dateOfFoundationFrom,
+                DateOfFoundationTo = dateOfFoundationTo
+            };
+
+            Sorting sorting = new Sorting
+            {
+                SortBy = sortBy,
+                SortDirection = sortDirection
+            };
+
+            Paging paging = new Paging
+            {
+                RecordsPerPage = recordsPerPage,
+                CurrentPage = currentPage
+            };
+
+            var clubs = await _clubService.GetClubsAsync(clubFilter, paging, sorting);
             return  clubs != null && clubs.Any() ? Ok(clubs) : NotFound("No clubs found.");
         }
     }

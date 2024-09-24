@@ -81,7 +81,7 @@ namespace NewSolution.Repository
 
         }
             public async Task<List<Footballer>> GetFootballersAsync(FootballerFilter footballerFilter, Paging paging, Sorting sorting)
-        {
+            {
             var footballers = new List<Footballer>();
 
             try

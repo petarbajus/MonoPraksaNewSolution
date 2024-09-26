@@ -1,12 +1,12 @@
 import React from "react";
-import './CSSFiles/App.css'; 
+import './CSSFiles/App.css';
 
 function Button({ text, onClick }) {
   return (
-    <button onClick={onClick}>
+    <button className="submit-button" onClick={onClick}>
       {text}
     </button>
   );
 }
-
+  
 export default Button;

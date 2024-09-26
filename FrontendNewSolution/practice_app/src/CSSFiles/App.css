@@ -1,10 +1,226 @@
-@import './Button.css';
-@import './ClubCrud.css';
-@import './ClubInsertForm.css';
-@import './Crud.css';
-@import './FootballerCrud.css';
-@import './FootballerInsertForm.css';
-@import './Modal.css';
-@import './ShowValue.css';
-@import './Table.css';
-@import './TableForm.css';
+/* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Navbar Styling */
+.navbar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    width: 100%;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.navbar a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+}
+
+.navbar a:hover {
+    color: #007bff;
+}
+
+/* Title Styling */
+.form-title {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+/* Page Title Styling */
+.page-title {
+    text-align: center; /* Center the title */
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  /* Add Button Styling */
+  .add-button-container {
+    display: flex;
+    justify-content: flex-start; /* Keep the button aligned to the left of the container */
+    margin-bottom: 20px; /* Space between button and table */
+    margin-left: 200px; /* Move the button to the right */
+  }
+  
+  .add-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .add-button:hover {
+    background-color: #0056b3;
+  }
+
+/* Container for the table */
+.universal-table-container {
+    width: 80%; /* Reduce the width from 100% to 80% to make it narrower */
+    margin: 20px auto; /* Center the table by using auto margins */
+    overflow-x: auto; /* Enable horizontal scrolling if needed */
+  }
+  
+  /* Table styling */
+  .universal-table {
+    width: 100%; /* Let the table take up the full width of its container */
+    border-collapse: collapse;
+    margin: 0 auto;
+    background-color: #fff;
+  }
+  
+  .universal-table th {
+    background-color: #007bff;
+    color: white;
+    text-align: left;
+    padding: 8px;
+  }
+  
+  .universal-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .universal-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  .universal-table tr:hover {
+    background-color: #ddd;
+  }
+  
+  .table-cell { 
+    padding: 12px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+/* Updated Form Styling */
+.universal-form-container {
+    max-width: 650px; /* Widen the form */
+    width: 100%;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+/* Button Styling for Submit */
+button, .submit-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease;
+}
+
+button:hover, .submit-button:hover {
+    background-color: #0056b3;
+}
+
+button:focus, .submit-button:focus {
+    outline: none;
+}
+
+/* Modal Styling */
+.modal-overlay {
+    display: block;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 50%;
+    max-width: 600px;
+    text-align: center;
+}
+
+.close-modal-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.close-modal-button:hover {
+    background-color: #0056b3;
+}
+
+.close-modal-button:focus {
+    outline: none;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px; /* Adds space between buttons */
+  }
+  
+  .action-buttons button {
+    margin-right: 5px; /* Adds a small right margin to each button */
+  }

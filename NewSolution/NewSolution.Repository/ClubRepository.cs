@@ -96,7 +96,7 @@ namespace NewSolution.Repository
 
         public async Task<List<Club>> GetClubsAsync(ClubFilter clubFilter, Paging paging, Sorting sorting)
         {
-            var clubs = new Dictionary<Guid, Club>();
+            var clubs = new List<Club>();
 
             try
             {
@@ -105,18 +105,13 @@ namespace NewSolution.Repository
                 commandText.Append("SELECT c.\"Id\" AS ClubId, ");
                 commandText.Append("c.\"Name\" AS ClubName, ");
                 commandText.Append("c.\"FoundationDate\", ");
-                commandText.Append("c.\"CharacteristicColor\", ");
-                commandText.Append("fb.\"Id\" AS FootballerId, ");
-                commandText.Append("fb.\"Name\" AS FootballerName, ");
-                commandText.Append("fb.\"DOB\" ");
-                commandText.Append("FROM \"Club\" c ");
-                commandText.Append("INNER JOIN \"Footballer\" fb ON fb.\"ClubId\" = c.\"Id\" ");
-
+                commandText.Append("c.\"CharacteristicColor\" ");
+                commandText.Append("FROM \"Club\" c "); // No JOIN with Footballer
 
                 // Start the WHERE clause to prevent syntax errors
                 commandText.Append("WHERE 1=1 ");
 
-                
+                // Apply filters
                 if (!string.IsNullOrEmpty(clubFilter.SearchQuery))
                 {
                     commandText.Append("AND c.\"Name\" ILIKE @SearchQuery ");
@@ -137,6 +132,7 @@ namespace NewSolution.Repository
                     commandText.Append("AND c.\"FoundationDate\" <= @DateOfFoundationTo ");
                 }
 
+                // Apply sorting
                 if (!string.IsNullOrEmpty(sorting.SortBy))
                 {
                     commandText.Append("ORDER BY ");
@@ -185,7 +181,7 @@ namespace NewSolution.Repository
 
                 if (paging.RecordsPerPage > 0)
                 {
-                    command.Parameters.AddWithValue("@RecordsPerPage", paging.RecordsPerPage);  
+                    command.Parameters.AddWithValue("@RecordsPerPage", paging.RecordsPerPage);
                     command.Parameters.AddWithValue("@Offset", (paging.CurrentPage - 1) * paging.RecordsPerPage);
                 }
 
@@ -193,28 +189,15 @@ namespace NewSolution.Repository
                 using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    var clubId = reader.GetGuid(0);
-                    if (!clubs.TryGetValue(clubId, out var club))
+                    var club = new Club
                     {
-                        club = new Club
-                        {
-                            Id = clubId,
-                            Name = reader.GetString(1),
-                            FoundationDate = !reader.IsDBNull(reader.GetOrdinal("FoundationDate")) ? DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("FoundationDate"))) : (DateOnly?)null,
-                            CharacteristicColor = reader.IsDBNull(reader.GetOrdinal("CharacteristicColor")) ? null : reader.GetString(reader.GetOrdinal("CharacteristicColor")),
-                            Footballers = new List<Footballer>()
-                        };
-                        clubs.Add(clubId, club);
-                    }
-
-                    var footballer = new Footballer
-                    {
-                        Id = reader.GetGuid(4),
-                        Name = reader.GetString(5),
-                        DOB = !reader.IsDBNull(6) ? (DateOnly?)DateOnly.FromDateTime(reader.GetDateTime(6)) : null,
-                        ClubId = clubId
+                        Id = reader.GetGuid(0),
+                        Name = reader.GetString(1),
+                        FoundationDate = !reader.IsDBNull(reader.GetOrdinal("FoundationDate")) ? DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("FoundationDate"))) : (DateOnly?)null,
+                        CharacteristicColor = reader.IsDBNull(reader.GetOrdinal("CharacteristicColor")) ? null : reader.GetString(reader.GetOrdinal("CharacteristicColor")),
                     };
-                    club.Footballers.Add(footballer);
+
+                    clubs.Add(club);
                 }
                 connection.Close();
             }
@@ -224,8 +207,10 @@ namespace NewSolution.Repository
                 return null;
             }
 
-            return clubs.Values.ToList();
+            return clubs;
         }
+
+
 
 
 

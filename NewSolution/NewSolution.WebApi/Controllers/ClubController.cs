@@ -35,8 +35,19 @@ namespace NewSolution.WebApi.Controllers
                 FoundationDate = clubAddModel.FoundationDate
             };
 
-            var success = await _clubService.InsertClubAsync(club);
-            return success ? Ok("Club added successfully.") : BadRequest("Failed to insert club.");
+            var isSuccessful = await _clubService.InsertClubAsync(club);
+
+            var clubGetModel = new ClubGetModel
+            {
+                Id = club.Id,
+                Name = club.Name,
+                CharacteristicColor = club.CharacteristicColor,
+                FoundationDate = club.FoundationDate,
+                //footballerNames = club.Footballers?.Select(f => f.Name).ToList() 
+            };
+
+
+            return isSuccessful ? Ok(clubGetModel) : BadRequest("Failed to insert club.");
         }
 
         [HttpDelete("deleteClubById/{id}")]
@@ -73,10 +84,11 @@ namespace NewSolution.WebApi.Controllers
 
             var clubGetModel = new ClubGetModel
             {
+                Id = club.Id,
                 Name = club.Name,
                 CharacteristicColor = club.CharacteristicColor,
                 FoundationDate = club.FoundationDate,
-                footballerNames = club.Footballers?.Select(f => f.Name).ToList() 
+                //footballerNames = club.Footballers?.Select(f => f.Name).ToList() 
             };
 
 
@@ -112,10 +124,11 @@ namespace NewSolution.WebApi.Controllers
 
             var clubGetModels = clubs.Select(c => new ClubGetModel
             {
+                Id = c.Id,
                 Name = c.Name,
                 CharacteristicColor = c.CharacteristicColor,
                 FoundationDate = c.FoundationDate,
-                footballerNames = c.Footballers?.Select(f => f.Name).ToList()  // Adding footballer names
+                //footballerNames = c.Footballers?.Select(f => f.Name).ToList()  // Adding footballer names
             }).ToList();
 
             return clubGetModels != null && clubGetModels.Any() ? Ok(clubGetModels) : NotFound("No clubs found.");

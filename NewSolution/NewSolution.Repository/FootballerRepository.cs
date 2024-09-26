@@ -42,7 +42,7 @@ namespace NewSolution.Repository
                 SELECT f.""Id"" AS FootballerId, f.""Name"" AS FootballerName, f.""DOB"", f.""ClubId"",
                  c.""Id"" AS ClubId, c.""Name"" AS ClubName, c.""FoundationDate"", c.""CharacteristicColor""
                 FROM ""Footballer"" f
-                LEFT JOIN ""Club"" c ON f.""ClubId"" = c.""Id""0
+                LEFT JOIN ""Club"" c ON f.""ClubId"" = c.""Id""
                 WHERE f.""Id"" = @id;";
 
 

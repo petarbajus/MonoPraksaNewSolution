@@ -1,11 +1,20 @@
 import React from "react";
 import Button from "./Button";
+import { useNavigate } from "react-router-dom"; 
 import './CSSFiles/App.css';
 
-function ClubInsertForm({ club, onSubmit, onInputChange }) {
+function ClubAddForm({ club, onSubmit, onInputChange }) {
+  const navigate = useNavigate();
+
+  const handleFormSubmit = async (event) => {
+    event.preventDefault();
+    await onSubmit();
+    navigate("/clubList");
+  };
+
   return (
-    <div className="club-insert-form">
-      <form onSubmit={onSubmit}>
+    <div className="universal-form-container">
+      <form onSubmit={handleFormSubmit}>
         <div className="form-group">
           <label>Club Name:</label>
           <input
@@ -38,10 +47,10 @@ function ClubInsertForm({ club, onSubmit, onInputChange }) {
             required
           />
         </div>
-        <Button text="Submit" className="submit-button" />
+        <Button text="Submit" />
       </form>
     </div>
   );
 }
 
-export default ClubInsertForm;
+export default ClubAddForm;

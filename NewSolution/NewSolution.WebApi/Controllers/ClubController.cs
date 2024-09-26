@@ -84,6 +84,7 @@ namespace NewSolution.WebApi.Controllers
 
             var clubGetModel = new ClubGetModel
             {
+                Id = club.Id,
                 Name = club.Name,
                 CharacteristicColor = club.CharacteristicColor,
                 FoundationDate = club.FoundationDate,

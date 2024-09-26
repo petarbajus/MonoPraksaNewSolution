@@ -90,8 +90,10 @@ namespace NewSolution.WebApi.Controllers
 
             var footballerGetModel = new FootballerGetModel
             {
+                Id = footballer.Id,
                 Name = footballer.Name,
                 DOB = footballer.DOB,
+                ClubId = footballer.ClubId
                 //ClubName = footballer.Club?.Name
             };
             return Ok(footballerGetModel); ;

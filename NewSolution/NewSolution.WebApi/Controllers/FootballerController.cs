@@ -40,7 +40,17 @@ namespace NewSolution.WebApi.Controllers
 
 
             var success = await _footballerService.InsertFootballerAsync(footballer);
-            return success ? Ok() : BadRequest("Failed to insert footballer.");
+
+            var footballerGetModel = new FootballerGetModel
+            {
+                Id = footballer.Id,
+                Name = footballer.Name,
+                DOB = footballer.DOB,
+                //ClubName = footballer.Club?.Name
+                ClubId = footballer.ClubId
+            };
+
+            return success ? Ok(footballerGetModel) : BadRequest("Failed to insert footballer.");
         }
 
         [HttpDelete("deleteFootballerById/{id}")]
@@ -62,6 +72,7 @@ namespace NewSolution.WebApi.Controllers
 
             footballer.Name = footballerUpdateModel.Name;
             footballer.ClubId = footballerUpdateModel.ClubId;
+            footballer.DOB = footballerUpdateModel.DOB;
 
             var success = await _footballerService.UpdateFootballerByIdAsync(id, footballer);
             return success ? Ok() : NotFound("Footballer not found.");
@@ -81,7 +92,7 @@ namespace NewSolution.WebApi.Controllers
             {
                 Name = footballer.Name,
                 DOB = footballer.DOB,
-                ClubName = footballer.Club?.Name
+                //ClubName = footballer.Club?.Name
             };
             return Ok(footballerGetModel); ;
         }
@@ -114,9 +125,10 @@ namespace NewSolution.WebApi.Controllers
 
             var footballerGetModels = footballers.Select(f => new FootballerGetModel
             {
+                Id = f.Id,
                 Name = f.Name,
                 DOB = f.DOB,
-                ClubName = f.Club?.Name
+                ClubId = f.Club.Id
             }).ToList();
 
             return footballerGetModels.Any() ? Ok(footballerGetModels) : NotFound("No footballers found.");

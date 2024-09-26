@@ -89,11 +89,16 @@ namespace NewSolution.Repository
                 using var connection = new NpgsqlConnection(ConnectionString);
                 var commandText = new StringBuilder();
 
-
-                commandText.Append("SELECT f.\"Id\" AS FootballerId, f.\"Name\" AS FootballerName, f.\"DOB\", f.\"ClubId\", ");
-                commandText.Append("c.\"Name\" AS ClubName, c.\"FoundationDate\", c.\"CharacteristicColor\" ");
+                commandText.Append("SELECT f.\"Id\" AS FootballerId, ");
+                commandText.Append("f.\"Name\" AS FootballerName, ");
+                commandText.Append("f.\"DOB\", ");
+                commandText.Append("f.\"ClubId\", ");
+                commandText.Append("c.\"Name\" AS ClubName, ");
+                commandText.Append("c.\"FoundationDate\", ");
+                commandText.Append("c.\"CharacteristicColor\" ");   
                 commandText.Append("FROM \"Footballer\" f ");
                 commandText.Append("LEFT JOIN \"Club\" c ON f.\"ClubId\" = c.\"Id\" ");
+
 
 
 
@@ -138,7 +143,6 @@ namespace NewSolution.Repository
                     }
                 }
 
-                // Apply pagination
                 if (paging.RecordsPerPage > 0)
                 {
                     commandText.Append("LIMIT @RecordsPerPage OFFSET @Offset ");
@@ -191,11 +195,14 @@ namespace NewSolution.Repository
                         footballer.DOB = null;
                     }
 
-                    footballer.ClubId = reader.IsDBNull(3) ? null : (Guid?)reader.GetGuid(3);
-
                     footballer.Club = new Club();
 
-                    footballer.Club.Name = reader.IsDBNull(4) ? null : reader.GetString(4);
+                    if (!reader.IsDBNull(3))
+                    {
+                        footballer.Club.Id = reader.GetGuid(3);
+
+                        footballer.Club.Name = reader.GetString(4);
+                    }
 
                     if (!reader.IsDBNull(5)) 
                     {

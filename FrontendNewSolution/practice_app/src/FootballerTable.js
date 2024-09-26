@@ -21,8 +21,8 @@ function FootballerTable({ footballers, onUpdateClick, onDeleteClick }) {
               <tr key={footballer.id}>
                 <ShowValue value={footballer.id} />
                 <ShowValue value={footballer.name} />
-                <ShowValue value={footballer.DOB} />
-                <ShowValue value={footballer.ClubId} />
+                <ShowValue value={footballer.dob} />
+                <ShowValue value={footballer.clubId} />
                 <td>
                   <Button text="Update" onClick={() => onUpdateClick(footballer)} />
                   <Button text="Delete" onClick={() => onDeleteClick(footballer.id)} />

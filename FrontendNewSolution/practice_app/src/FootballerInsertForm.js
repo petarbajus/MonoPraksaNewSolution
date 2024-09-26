@@ -13,26 +13,29 @@ function FootballerInsertForm({ footballer, onSubmit, onInputChange }) {
           value={footballer.name}
           onChange={onInputChange}
           placeholder="Enter Footballer Name"
+          required
         />
       </div>
       <div className="form-group">
         <label>Date of Birth:</label>
         <input
           type="date"
-          name="DOB"
-          value={footballer.DOB}
+          name="dob"
+          value={footballer.dob}
           onChange={onInputChange}
           placeholder="Enter Date of Birth"
+          required
         />
       </div>
       <div className="form-group">
         <label>Club ID:</label>
         <input
           type="text"
-          name="ClubId"
-          value={footballer.ClubId}
+          name="clubId"
+          value={footballer.clubId}
           onChange={onInputChange}
           placeholder="Enter Club ID"
+          required
         />
       </div>
       <Button text="Submit" />

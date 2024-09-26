@@ -3,32 +3,55 @@ import FootballerInsertForm from "./FootballerInsertForm";
 import FootballerTable from "./FootballerTable.js";
 import FootballerTableUpdateForm from "./FootballerTableUpdateForm";
 import './CSSFiles/App.css'; 
+import api from './api/clubsfootballers'; 
 
 function FootballerTableForm() {
-    const [footballer, setFootballer] = useState({ id: "", name: "", DOB: "", ClubId: "" });
+    const [footballer, setFootballer] = useState({ id: "", name: "", dob: "", clubId: "" });
     const [footballers, setFootballers] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedFootballer, setSelectedFootballer] = useState(null);
   
-    useEffect(() => {
-      const storedFootballers = JSON.parse(localStorage.getItem("footballers")) || [];
-      setFootballers(storedFootballers);
-    }, []);
+    const fetchFootballers = async () => {
+      try {
+        const response = await api.get("api/Footballer/getFootballers", {
+          params: {
+            sortBy: "FootballerId",
+            sortDirection: "DESC",
+            recordsPerPage: 6,
+            currentPage: 1,
+          }
+        });
+        if (response && response.data) setFootballers(response.data);
+      } catch (err) {
+        console.error("Error fetching footballers", err);
+      }
+    };
   
-    function handleSubmit(event) {
+    useEffect(() => {
+      fetchFootballers();
+    }, []);
+
+    async function handleSubmit(event) {
+      debugger
       event.preventDefault();
-      
-      const storedFootballers = JSON.parse(localStorage.getItem("footballers")) || [];
-      const lastFootballerId = JSON.parse(localStorage.getItem("LastFootballerId")) || 0;
-      const newFootballerId = lastFootballerId + 1;
-      
-      const updatedFootballers = [...storedFootballers, { ...footballer, id: newFootballerId }];
-      
-      localStorage.setItem("footballers", JSON.stringify(updatedFootballers));
-      localStorage.setItem("LastFootballerId", JSON.stringify(newFootballerId));
-      
-      setFootballers(updatedFootballers);
-      setFootballer({ id: "", name: "", DOB: "", ClubId: "" });
+  
+      const newFootballer = {
+        name: footballer.name,
+        dob: footballer.dob,
+        clubId: footballer.clubId
+      };
+      try {
+        console.log(newFootballer);
+        const response = await api.post("api/Footballer/insertFootballer", newFootballer);
+        if (response && response.status) {
+          alert("Footballer successfully added");
+          fetchFootballers(); // Refresh footballer list after addition
+        }
+      } catch (err) {
+        console.error("Error adding the footballer", err);
+      }
+  
+      setFootballer({ id: "", name: "", dob: "", clubId: "" });
     }
   
     function handleInputChange(event) {
@@ -42,15 +65,17 @@ function FootballerTableForm() {
       setSelectedFootballer(footballer);
       setIsModalVisible(true);
     }
-  
-    function handleUpdateSubmit(updatedFootballer) {
-      const storedFootballers = JSON.parse(localStorage.getItem("footballers")) || [];
-      const updatedFootballers = storedFootballers.map((footballer) =>
-        footballer.id === updatedFootballer.id ? updatedFootballer : footballer
-      );
-      localStorage.setItem("footballers", JSON.stringify(updatedFootballers));
-      setFootballers(updatedFootballers);
-      setIsModalVisible(false);
+
+    async function handleUpdateSubmit(updatedFootballer) {
+      try {
+        const response = await api.put(`api/Footballer/updateFootballerById/${updatedFootballer.id}`, updatedFootballer);
+        if (response && response.status) {
+          alert("Footballer successfully updated");
+          fetchFootballers();
+        }
+      } catch (err) {
+        console.error("Error updating the footballer", err);
+      }
     }
   
     function handleClose() {
@@ -58,11 +83,16 @@ function FootballerTableForm() {
       setIsModalVisible(false);
     }
   
-    function handleDeleteClick(footballerId) {
-      const storedFootballers = JSON.parse(localStorage.getItem("footballers")) || [];
-      const updatedFootballers = storedFootballers.filter((footballer) => footballer.id !== footballerId);
-      localStorage.setItem("footballers", JSON.stringify(updatedFootballers));
-      setFootballers(updatedFootballers);
+    async function handleDeleteClick(footballerId) {
+      try {
+        const response = await api.delete(`api/Footballer/deleteFootballerById/${footballerId}`);
+        if (response && response.status) {
+          alert("Footballer successfully deleted");
+          fetchFootballers();
+        }
+      } catch (err) {
+        console.error("Error deleting the footballer", err);
+      }
     }
   
     return (

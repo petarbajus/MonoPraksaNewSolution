@@ -3,6 +3,7 @@ import ClubInsertForm from "./ClubInsertForm";
 import ClubTable from "./ClubTable";
 import ClubTableUpdateForm from "./ClubTableUpdateForm";
 import './CSSFiles/App.css'; // Importing CSS for styling
+import api from './api/clubsfootballers'; 
 
 function ClubTableForm() {
   const [club, setClub] = useState({ id: "", name: "", characteristicColor: "", foundationDate: "" });
@@ -10,30 +11,48 @@ function ClubTableForm() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedClub, setSelectedClub] = useState(null);
 
-  // Load clubs from localStorage when component mounts
+  const fetchClubs = async() => {
+    try {
+      const response = await api.get("api/Club/getClubs", {
+        params: {
+          sortBy: "ClubId",
+          sortDirection: "DESC",
+          recordsPerPage: 6,
+          currentPage: 1,
+        }
+      });
+      if(response && response.data) setClubs(response.data);
+    } catch(err) {
+      console.error("Error fetching clubs", err);
+    }
+  };
+
   useEffect(() => {
-    const storedClubs = JSON.parse(localStorage.getItem("clubs")) || [];
-    setClubs(storedClubs);
+    fetchClubs();
   }, []);
+    
+  async function handleSubmit(event) {
+  event.preventDefault();
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    
-    const storedClubs = JSON.parse(localStorage.getItem("clubs")) || [];
+  const newClub = {
+    name: club.name,
+    characteristicColor: club.characteristicColor,
+    foundationDate: club.foundationDate
+  };
 
-    const lastClubId = JSON.parse(localStorage.getItem("LastClubId")) || 0;
-    
-    const newClubId = lastClubId + 1;
-    
-    const updatedClubs = [...storedClubs, { ...club, id: newClubId }];
-    
-    localStorage.setItem("clubs", JSON.stringify(updatedClubs));
-    localStorage.setItem("LastClubId", JSON.stringify(newClubId));
-    
-    setClubs(updatedClubs);
-    
-    setClub({ id: "", name: "", characteristicColor: "", foundationDate: "" });
+  try {
+    const response = await api.post("api/Club/insertClub", newClub);
+    if (response && response.status) {
+      alert("Club successfully added")
+      fetchClubs();
+    }
+  } catch (err) {
+    console.error("Error adding the club", err);
   }
+
+  setClub({ id: "", name: "", characteristicColor: "", foundationDate: "" });
+}
+    
 
   function handleInputChange(event) {
     setClub({
@@ -47,14 +66,16 @@ function ClubTableForm() {
     setIsModalVisible(true);
   }
 
-  function handleUpdateSubmit(updatedClub) {
-    const storedClubs = JSON.parse(localStorage.getItem("clubs")) || [];
-    const updatedClubs = storedClubs.map((club) =>
-      club.id === updatedClub.id ? updatedClub : club
-    );
-    localStorage.setItem("clubs", JSON.stringify(updatedClubs));
-    setClubs(updatedClubs);
-    setIsModalVisible(false);
+  async function handleUpdateSubmit(updatedClub) {
+    try {
+      const response = await api.put(`api/Club/updateClubById/${updatedClub.id}`, updatedClub);
+      if (response && response.status) {
+        alert("Club successfully updated");
+        fetchClubs();
+      }
+    } catch (err) {
+      console.error("Error updating the club", err);
+    }
   }
 
   function handleClose() {
@@ -62,11 +83,16 @@ function ClubTableForm() {
     setIsModalVisible(false);
   }
 
-  function handleDeleteClick(clubId) {
-    const storedClubs = JSON.parse(localStorage.getItem("clubs")) || [];
-    const updatedClubs = storedClubs.filter((club) => club.id !== clubId);
-    localStorage.setItem("clubs", JSON.stringify(updatedClubs));
-    setClubs(updatedClubs);
+  async function handleDeleteClick(clubId) {
+    try {
+      const response = await api.delete(`api/Club/deleteClubById/${clubId}`);
+      if (response && response.status) {
+        alert("Club successfully deleted");
+        fetchClubs();
+      }
+    } catch (err) {
+      console.error("Error deleting the club", err);
+    }
   }
 
   return (
@@ -82,5 +108,4 @@ function ClubTableForm() {
     </div>
   );
 }
-
 export default ClubTableForm;
